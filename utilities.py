@@ -21,6 +21,7 @@ class Logger:
     def log_values(self, values_list):
 
         with open(self.filename, 'a') as file:
+            vals_str=""
             # write values separated by commas
             for val in values_list:
                 vals_str += str(val)
