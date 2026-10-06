@@ -15,7 +15,7 @@ from nav_msgs.msg import Odometry
 from rclpy.time import Time
 
 # You may add any other imports you may need/want to use below
-from rclpy.qos import ReliabilityPolicy
+from rclpy.qos import ReliabilityPolicy, DurabilityPolicy, HistoryPolicy
 
 
 CIRCLE=0; SPIRAL=1; ACC_LINE=2
@@ -36,9 +36,6 @@ class motion_executioner(Node):
         self.imu_initialized=False
         self.odom_initialized=False
         self.laser_initialized=False
-        
-        # Publisher for velocity commands
-        self.vel_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
                 
         # loggers
         self.imu_logger=Logger('imu_content_'+str(motion_types[motion_type])+'.csv', headers=["acc_x", "acc_y", "angular_z", "stamp"])
@@ -46,7 +43,15 @@ class motion_executioner(Node):
         self.laser_logger=Logger('laser_content_'+str(motion_types[motion_type])+'.csv', headers=["ranges", "angle_increment", "stamp"])
         
         # QoS profile for sensor data (TB4 sensors use Best Effort)
-        qos = QoSProfile(depth=10, reliability=ReliabilityPolicy.BEST_EFFORT)
+        qos=QoSProfile(
+            history=HistoryPolicy.KEEP_LAST,
+            depth=10,
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE
+        )
+
+        # Publisher for velocity commands
+        self.vel_publisher = self.create_publisher(Twist, '/cmd_vel', qos)
 
         # Sensor subscriptions
         self.imu_sub = self.create_subscription(Imu, '/imu', self.imu_callback, qos)
@@ -70,8 +75,7 @@ class motion_executioner(Node):
     def odom_callback(self, odom_msg: Odometry):
         self.odom_initialized = True
         stamp = Time.from_msg(odom_msg.header.stamp).nanoseconds
-        q = odom_msg.pose.pose.orientation
-        th = euler_from_quaternion([q.x, q.y, q.z, q.w])
+        th = euler_from_quaternion(odom_msg.pose.pose.orientation)
         self.odom_logger.log_values([
             odom_msg.pose.pose.position.x,
             odom_msg.pose.pose.position.y,
