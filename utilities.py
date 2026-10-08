@@ -1,4 +1,5 @@
 from math import atan2, asin, sqrt
+import numpy as np 
 
 M_PI=3.1415926535
 
@@ -73,7 +74,7 @@ class FileReader:
                 for val in values:
                     if val=='':
                         break
-                    row.append(float(val.strip()))
+                    row.append(float(val.strip().strip('[]')))
 
                 table.append(row)
         
