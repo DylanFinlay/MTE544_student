@@ -122,12 +122,12 @@ def calculate_angular_error(current_pose, goal_pose):
     goal_dist_x= (goal_pose[0]-current_pose[0])
     goal_dist_y= (goal_pose[1]-current_pose[1])
 
-    goal_direction = math.atan2(goal_dist_y, goal_dist_x)
+    goal_direction = atan2(goal_dist_y, goal_dist_x)
 
     error_angular = goal_direction - current_pose[2]
 
     # Remember to handle the cases where the angular error might exceed the range [-π, π]
     # need to add math.py to error angle to preserve it through the mod 
-    error_angular = (error_angular  + math.pi) % (2*math.pi) - math.pi 
+    error_angular = (error_angular  + M_PI) % (2*M_PI) - M_PI 
     
     return error_angular
