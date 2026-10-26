@@ -28,33 +28,20 @@ class planner:
 
     # TODO Part 6: Implement the trajectories here
     def trajectory_planner(self):
-
-        # quadtratic function
-
+        
         points = []
 
+        # quadtratic function
         for i in range(NUMBER_OF_POINTS): 
             x = QUADRATIC_RANGE * i / (NUMBER_OF_POINTS -1) 
             y = x **2 
             points.append([x,y])
-            
-
-        return points 
 
         # Sigmoid function 
-
-        # points = []
-
         # for i in range(NUMBER_OF_POINTS): 
         #     x = SIGMOID_RANGE * i / (NUMBER_OF_POINTS -1) 
         #     y = 2 / (1 + math.exp(-2*x)) -1 
         #     points.append([x,y])
             
-
-        # return points 
-
-
-        pass
         # the return should be a list of trajectory points: [ [x1,y1], ..., [xn,yn]]
-        # return 
-
+        return points 
