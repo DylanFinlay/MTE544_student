@@ -6,6 +6,16 @@ from utilities import euler_from_quaternion, calculate_angular_error, calculate_
 
 M_PI=3.1415926535
 
+#NOTE: BEFORE RUNNING THE REAL ROBOT STUFF MAKE SURE YOU SWITCH SATURATION LIMITS SINCE SIM ONES ARE HIGHER 
+
+# sim saturation limits
+TB3_MAX_ANGULAR_VEL = 0.22 # m/s
+TB3_MAX_LINEAR_VEL = 2.84 # rad 
+
+# real saturation limits
+TB4_MAX_ANGULAR_VEL = 0.31 # m/s
+TB4_MAX_LINEAR_VEL = 1.9 # rad 
+
 P=0; PD=1; PI=2; PID=3
 
 class controller:
@@ -30,8 +40,8 @@ class controller:
         
         # TODO Part 4: Add saturation limits for the robot linear and angular velocity
 
-        linear_vel = 1.0 if linear_vel > 1.0 else linear_vel
-        angular_vel= 1.0 if angular_vel > 1.0 else angular_vel
+        linear_vel = TB3_MAX_LINEAR_VEL if linear_vel > TB3_MAX_LINEAR_VEL else linear_vel
+        angular_vel= TB3_MAX_ANGULAR_VEL if angular_vel > TB3_MAX_ANGULAR_VEL else angular_vel
         
         return linear_vel, angular_vel
     
@@ -57,9 +67,9 @@ class trajectoryController(controller):
 
         # TODO Part 5: Add saturation limits for the robot linear and angular velocity
 
-        # choose 1.0 based on what we see in part 4) 
-        linear_vel = 1.0 if linear_vel > 1.0 else linear_vel
-        angular_vel= 1.0 if angular_vel > 1.0 else angular_vel
+        # same as previous 
+        linear_vel = TB3_MAX_LINEAR_VEL if linear_vel > TB3_MAX_LINEAR_VEL else linear_vel
+        angular_vel= TB3_MAX_ANGULAR_VEL if angular_vel > TB3_MAX_ANGULAR_VEL else angular_vel
         
         return linear_vel, angular_vel
 
