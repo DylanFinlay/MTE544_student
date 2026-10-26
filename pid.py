@@ -66,7 +66,10 @@ class PID_ctrl:
             # for example dt=0.1 overwriting the calculation          
             
             # TODO Part 5: calculate the error dot 
-            # error_dot+= ... 
+            e0 = self.history[i-1][0]
+            e1 self.history[i][0]
+
+            error_dot+= (e1 - e0) / dt 
             
         error_dot/=len(self.history)
         dt_avg/=len(self.history)
@@ -75,17 +78,22 @@ class PID_ctrl:
         sum_=0
         for hist in self.history:
             # TODO Part 5: Gather the integration
-            # sum_+=...
+            sum_+= hist[0]
             pass
         
         error_int=sum_*dt_avg
         
         # TODO Part 4: Log your errors
-        self.logger.log_values( ... )
+        self.logger.log_values( 
+            latest_error, 
+            error_dot, 
+            error_int, 
+            Time.from_msg(stamp).nanoseconds
+         )
         
         # TODO Part 4: Implement the control law of P-controller
         if self.type == P:
-            return ... # complete
+            return self.kp * latest_error # complete
         
         # TODO Part 5: Implement the control law corresponding to each type of controller
         elif self.type == PD:
