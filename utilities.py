@@ -91,6 +91,10 @@ def euler_from_quaternion(quat):
     """
 
     # just unpack yaw
+    x, y, z, w = quat.x, quat.y, quat.z, quat.w
+    siny_cosp = 2.0 * (w * z + x * y)
+    cosy_cosp = 1.0 - 2.0 * (y * y + z * z)
+    yaw = atan2(siny_cosp, cosy_cosp)
     return yaw
 
 
