@@ -121,7 +121,7 @@ def main(args=None):
             publisher_msg=Twist,
             publishing_topic='/cmd_vel',
             qos_publisher=odom_qos,
-            goalPoint=[-1.0, -1.0],
+            goalPoint=[-1.0, -1.0], # We can adjust this hardcoded value or maybe set it up as a CLI argument
             rate=10,
             motion_type=POINT_PLANNER
         )
@@ -130,7 +130,7 @@ def main(args=None):
             publisher_msg=Twist,
             publishing_topic='/cmd_vel',
             qos_publisher=odom_qos,
-            goalPoint=[-1.0, -1.0],
+            goalPoint=[-1.0, -1.0], # goalPoint for trajectory doesn't actually get used with current setup
             rate=10,
             motion_type=TRAJECTORY_PLANNER
         )
