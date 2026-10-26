@@ -108,7 +108,7 @@ def main(args=None):
     # Remember to define your QoS profile based on the information available in "ros2 topic info /odom --verbose" as explained in Tutorial 3
     
     odom_qos=QoSProfile(
-        reliability=ReliabilityPolicy.BEST_EFFORT, # Need to confirm but: change reliability to 'RELIABLE' in simulation
+        reliability=ReliabilityPolicy.BEST_EFFORT, # Use 'BEST_EFFORT' on TB4. Use 'RELIABLE' in sim
         durability=DurabilityPolicy.VOLATILE,
         history=HistoryPolicy.KEEP_LAST,
         depth=10

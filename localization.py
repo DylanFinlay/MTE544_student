@@ -24,7 +24,7 @@ class localization(Node):
         odom_qos=QoSProfile(
             history=HistoryPolicy.KEEP_LAST,
             depth=1, # Only act on latest message in queue so we don't have stale data
-            reliability=ReliabilityPolicy.BEST_EFFORT, # Need to confirm but: change reliability to 'RELIABLE' in simulation
+            reliability=ReliabilityPolicy.BEST_EFFORT, # Use 'BEST_EFFORT' on TB4. Use 'RELIABLE' in sim
             durability=DurabilityPolicy.VOLATILE
         )
         
