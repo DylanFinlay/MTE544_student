@@ -23,7 +23,7 @@ class localization(Node):
         # QoS profile for sensor data (TB4 sensors use Best Effort)
         odom_qos=QoSProfile(
             history=HistoryPolicy.KEEP_LAST,
-            depth=10,
+            depth=1, # Only act on latest message in queue so we don't have stale data
             reliability=ReliabilityPolicy.BEST_EFFORT, # Need to confirm but: change reliability to 'RELIABLE' in simulation
             durability=DurabilityPolicy.VOLATILE
         )
