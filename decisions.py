@@ -10,7 +10,7 @@ from rclpy import init, spin, spin_once
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 
-from rclpy.qos import QoSProfile
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPolicy
 from nav_msgs.msg import Odometry as odom
 
 from localization import localization, rawSensor
@@ -62,7 +62,8 @@ class decision_maker(Node):
     def timerCallback(self):
         
         # TODO Part 3: Run the localization node
-        ...    # Remember that this file is already running the decision_maker node.
+        # Remember that this file is already running the decision_maker node.
+        spin_once(self.localizer, timeout_sec=0)
 
         if self.localizer.getPose()  is  None:
             print("waiting for odom msgs ....")
@@ -71,11 +72,13 @@ class decision_maker(Node):
         vel_msg=Twist()
         
         # TODO Part 3: Check if you reached the goal
+        dist_tolerance = 0.1  # meters (still need to adjust this)
+        current_pose = self.localizer.getPose()
+
         if type(self.goal) == list:
-            reached_goal=...
+            reached_goal=calculate_linear_error(current_pose, self.goal[-1]) < dist_tolerance
         else: 
-            reached_goal=...
-        
+            reached_goal=calculate_linear_error(current_pose, self.goal) < dist_tolerance
 
         if reached_goal:
             print("reached goal")
@@ -85,7 +88,7 @@ class decision_maker(Node):
             self.controller.PID_linear.logger.save_log()
             
             #TODO Part 3: exit the spin
-            ... 
+            sys.exit(0)
         
         velocity, yaw_rate = self.controller.vel_request(self.localizer.getPose(), self.goal, True)
 
@@ -102,7 +105,12 @@ def main(args=None):
     # TODO Part 3: You migh need to change the QoS profile based on whether you're using the real robot or in simulation.
     # Remember to define your QoS profile based on the information available in "ros2 topic info /odom --verbose" as explained in Tutorial 3
     
-    odom_qos=QoSProfile(reliability=2, durability=2, history=1, depth=10)
+    odom_qos=QoSProfile(
+        reliability=ReliabilityPolicy.BEST_EFFORT, # Need to confirm but: change reliability to 'RELIABLE' in simulation
+        durability=DurabilityPolicy.VOLATILE,
+        history=HistoryPolicy.KEEP_LAST,
+        depth=10
+        )
     
 
     # TODO Part 4: instantiate the decision_maker with the proper parameters for moving the robot
