@@ -79,7 +79,6 @@ class PID_ctrl:
         for hist in self.history:
             # TODO Part 5: Gather the integration
             sum_+= hist[0]
-            pass
         
         error_int=sum_*dt_avg
         
@@ -97,13 +96,12 @@ class PID_ctrl:
         
         # TODO Part 5: Implement the control law corresponding to each type of controller
         elif self.type == PD:
-            pass
-            # return ... # complete
+
+            return self.kp * latest_error + self.kv * error_dot 
         
         elif self.type == PI:
-            pass
-            # return ... # complete
+            
+            return self.error * latest_error + self.ki * error_int 
         
         elif self.type == PID:
-            pass
-            # return ... # complete
+            return self.error * latest_error + self.kp * error_dt + self.ki * error_int 
