@@ -67,7 +67,7 @@ class PID_ctrl:
             
             # TODO Part 5: calculate the error dot 
             e0 = self.history[i-1][0]
-            e1 self.history[i][0]
+            e1 = self.history[i][0]
 
             error_dot+= (e1 - e0) / dt 
             
@@ -104,4 +104,4 @@ class PID_ctrl:
             return self.error * latest_error + self.ki * error_int 
         
         elif self.type == PID:
-            return self.error * latest_error + self.kp * error_dt + self.ki * error_int 
+            return self.error * latest_error + self.kp * error_dot + self.ki * error_int 
