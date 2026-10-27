@@ -72,7 +72,7 @@ class decision_maker(Node):
         vel_msg=Twist()
         
         # TODO Part 3: Check if you reached the goal
-        dist_tolerance = 0.1  # meters (still need to adjust this)
+        dist_tolerance = 0.05  # meters (still need to adjust this)
         current_pose = self.localizer.getPose()
 
         if type(self.goal) == list:
