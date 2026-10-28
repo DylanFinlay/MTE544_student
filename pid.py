@@ -101,7 +101,7 @@ class PID_ctrl:
         
         elif self.type == PI:
             
-            return self.error * latest_error + self.ki * error_int 
+            return self.kp * latest_error + self.ki * error_int 
         
         elif self.type == PID:
-            return self.error * latest_error + self.kp * error_dot + self.ki * error_int 
+            return self.kp * latest_error + self.kv * error_dot + self.ki * error_int 
