@@ -25,8 +25,8 @@ class controller:
     def __init__(self, klp=0.2, klv=0.2, kli=0.2, kap=0.2, kav=0.2, kai=0.2):
         
         # TODO Part 5 and 6: Modify the below lines to test your PD, PI, and PID controller
-        self.PID_linear=PID_ctrl(P, klp, klv, kli, filename_="linear.csv")
-        self.PID_angular=PID_ctrl(P, kap, kav, kai, filename_="angular.csv")
+        self.PID_linear=PID_ctrl(PID, klp, klv, kli, filename_="linear.csv")
+        self.PID_angular=PID_ctrl(PID, kap, kav, kai, filename_="angular.csv")
 
     
     def vel_request(self, pose, goal, status):
@@ -40,8 +40,8 @@ class controller:
         
         # TODO Part 4: Add saturation limits for the robot linear and angular velocity
 
-        linear_vel = TB3_MAX_LINEAR_VEL if linear_vel > TB3_MAX_LINEAR_VEL else linear_vel
-        angular_vel= TB3_MAX_ANGULAR_VEL if angular_vel > TB3_MAX_ANGULAR_VEL else angular_vel
+        linear_vel = TB4_MAX_LINEAR_VEL if linear_vel > TB4_MAX_LINEAR_VEL else linear_vel
+        angular_vel= TB4_MAX_ANGULAR_VEL if angular_vel > TB4_MAX_ANGULAR_VEL else angular_vel
         
         return linear_vel, angular_vel
     
@@ -68,8 +68,8 @@ class trajectoryController(controller):
         # TODO Part 5: Add saturation limits for the robot linear and angular velocity
 
         # same as previous 
-        linear_vel = TB3_MAX_LINEAR_VEL if linear_vel > TB3_MAX_LINEAR_VEL else linear_vel
-        angular_vel= TB3_MAX_ANGULAR_VEL if angular_vel > TB3_MAX_ANGULAR_VEL else angular_vel
+        linear_vel = TB4_MAX_LINEAR_VEL if linear_vel > TB4_MAX_LINEAR_VEL else linear_vel
+        angular_vel= TB4_MAX_ANGULAR_VEL if angular_vel > TB4_MAX_ANGULAR_VEL else angular_vel
         
         return linear_vel, angular_vel
 

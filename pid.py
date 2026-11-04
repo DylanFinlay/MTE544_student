@@ -9,7 +9,7 @@ PID=3 # proportional, integral, derivative
 
 class PID_ctrl:
     
-    def __init__(self, type_, kp=1.2,kv=0.8,ki=0.2, history_length=3, filename_="errors.csv"):
+    def __init__(self, type_, kp=1.2,kv=0.8,ki=0.2, history_length=5, filename_="errors.csv"):
         
         # Data for the controller
         self.history_length=history_length
@@ -59,6 +59,9 @@ class PID_ctrl:
             t1=Time.from_msg(self.history[i][1])
             
             dt=(t1.nanoseconds - t0.nanoseconds) / 1e9
+
+            if dt < 1e-9: 
+                continue 
             
             dt_avg+=dt
 
