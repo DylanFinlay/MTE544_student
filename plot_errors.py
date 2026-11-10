@@ -303,6 +303,113 @@ def plot_trajectory_summary(folder, data, traj_type, save_path=None):
     return fig
 
 
+def plot_tracking_errors_single_plot(folder, data, traj_type, save_path=None):
+    """
+    Plots both Linear Error (e_lin) and Angular Error (e_ang) vs Time on a single plot
+    using dual y-axes (twinx) for clean report inclusion.
+    """
+    has_lin = 'linear' in data
+    has_ang = 'angular' in data
+    if not has_lin and not has_ang:
+        return None
+
+    run_name = os.path.basename(folder)
+    display_name = "Parabola (PID #9)" if "pid_9" in run_name.lower() else (
+        "Sigmoid (Improved PID)" if "sigmoid" in run_name.lower() else f"{traj_type.capitalize()} ({run_name})"
+    )
+
+    fig, ax_lin = plt.subplots(figsize=(6.5, 4.5))
+    ax_ang = ax_lin.twinx()
+
+    # Horizontal zero reference
+    ax_lin.axhline(0, color='gray', linestyle=':', alpha=0.5, linewidth=1.2)
+
+    if has_lin:
+        l = data['linear']
+        ax_lin.plot(l['t'], l['e'], color='#1f77b4', linestyle='-', linewidth=2.0, label=r'Linear Error $e_{lin}$ [m]')
+        ax_lin.set_ylabel(r'Linear Error $e_{lin}$ [m]', color='#1f77b4', fontsize=10)
+        ax_lin.tick_params(axis='y', labelcolor='#1f77b4')
+
+    if has_ang:
+        a = data['angular']
+        ax_ang.plot(a['t'], a['e'], color='#d62728', linestyle='--', linewidth=2.0, label=r'Angular Error $e_{ang}$ [rad]')
+        ax_ang.set_ylabel(r'Angular Error $e_{ang}$ [rad]', color='#d62728', fontsize=10)
+        ax_ang.tick_params(axis='y', labelcolor='#d62728')
+
+    ax_lin.set_xlabel('Time [s]', fontsize=10)
+    ax_lin.set_title(f'Tracking Errors vs Time: {display_name}', fontsize=11, fontweight='bold')
+    ax_lin.grid(True)
+
+    # Combine legends from both axes
+    lines1, labels1 = ax_lin.get_legend_handles_labels()
+    lines2, labels2 = ax_ang.get_legend_handles_labels()
+    ax_lin.legend(lines1 + lines2, labels1 + labels2, loc='upper right', framealpha=0.88)
+
+    plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path, dpi=300)
+        plt.close(fig)
+    return fig
+
+
+def plot_bonus_errors_combined(pid9_folder, sigmoid_folder, save_path=None):
+    """
+    Generates a 1x2 figure showing the linear and angular tracking errors
+    for Parabola (pid_9) and Sigmoid (pid_sigmoid_improved) side-by-side.
+    """
+    data_p = load_run_data(pid9_folder)
+    data_s = load_run_data(sigmoid_folder)
+
+    fig, (ax1_lin, ax2_lin) = plt.subplots(1, 2, figsize=(13.0, 4.8))
+    fig.suptitle('Trajectory Tracking Errors: Linear and Angular Errors vs Time', fontsize=12, fontweight='bold', y=0.98)
+
+    # 1. Parabola (pid_9)
+    ax1_ang = ax1_lin.twinx()
+    ax1_lin.axhline(0, color='gray', linestyle=':', alpha=0.5, linewidth=1.2)
+    if 'linear' in data_p:
+        l = data_p['linear']
+        ax1_lin.plot(l['t'], l['e'], color='#1f77b4', linestyle='-', linewidth=2.0, label=r'Linear Error $e_{lin}$ [m]')
+        ax1_lin.set_ylabel(r'Linear Error $e_{lin}$ [m]', color='#1f77b4')
+        ax1_lin.tick_params(axis='y', labelcolor='#1f77b4')
+    if 'angular' in data_p:
+        a = data_p['angular']
+        ax1_ang.plot(a['t'], a['e'], color='#d62728', linestyle='--', linewidth=2.0, label=r'Angular Error $e_{ang}$ [rad]')
+        ax1_ang.set_ylabel(r'Angular Error $e_{ang}$ [rad]', color='#d62728')
+        ax1_ang.tick_params(axis='y', labelcolor='#d62728')
+    ax1_lin.set_xlabel('Time [s]')
+    ax1_lin.set_title('(a) Parabola: $y = x^2$ (pid_9)', fontsize=11, fontweight='bold')
+    ax1_lin.grid(True)
+    lines1, labels1 = ax1_lin.get_legend_handles_labels()
+    lines2, labels2 = ax1_ang.get_legend_handles_labels()
+    ax1_lin.legend(lines1 + lines2, labels1 + labels2, loc='upper right', framealpha=0.88)
+
+    # 2. Sigmoid (pid_sigmoid_improved)
+    ax2_ang = ax2_lin.twinx()
+    ax2_lin.axhline(0, color='gray', linestyle=':', alpha=0.5, linewidth=1.2)
+    if 'linear' in data_s:
+        l = data_s['linear']
+        ax2_lin.plot(l['t'], l['e'], color='#1f77b4', linestyle='-', linewidth=2.0, label=r'Linear Error $e_{lin}$ [m]')
+        ax2_lin.set_ylabel(r'Linear Error $e_{lin}$ [m]', color='#1f77b4')
+        ax2_lin.tick_params(axis='y', labelcolor='#1f77b4')
+    if 'angular' in data_s:
+        a = data_s['angular']
+        ax2_ang.plot(a['t'], a['e'], color='#d62728', linestyle='--', linewidth=2.0, label=r'Angular Error $e_{ang}$ [rad]')
+        ax2_ang.set_ylabel(r'Angular Error $e_{ang}$ [rad]', color='#d62728')
+        ax2_ang.tick_params(axis='y', labelcolor='#d62728')
+    ax2_lin.set_xlabel('Time [s]')
+    ax2_lin.set_title(r'(b) Sigmoid: $\sigma(x)$ (pid_sigmoid_improved)', fontsize=11, fontweight='bold')
+    ax2_lin.grid(True)
+    lines1, labels1 = ax2_lin.get_legend_handles_labels()
+    lines2, labels2 = ax2_ang.get_legend_handles_labels()
+    ax2_lin.legend(lines1 + lines2, labels1 + labels2, loc='upper right', framealpha=0.88)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    if save_path:
+        plt.savefig(save_path, dpi=300)
+        plt.close(fig)
+    return fig
+
+
 # =========================================================================
 # Section 2 Deliverable: Stability Analysis Numerical Metrics Table
 # Agility (Rise Time), Accuracy (Steady-state error), Overshoot, Oscillations
@@ -582,7 +689,12 @@ def process_all_subfolders(base_dirs):
                 plot_trajectory_xy_standalone(subfolder, data, traj_type, save_path=out_xy)
                 print(f"   [Report Fig] Generated {out_xy} ({traj_type})")
 
-                # 2. Comprehensive 3-panel figure
+                # 2. Standalone tracking error plot (linear & angular on one single plot)
+                out_err = os.path.join(subfolder, "report_errors.png")
+                plot_tracking_errors_single_plot(subfolder, data, traj_type, save_path=out_err)
+                print(f"   [Report Fig] Generated {out_err}")
+
+                # 3. Comprehensive 3-panel figure
                 out_summary = os.path.join(subfolder, "report_trajectory_summary.png")
                 plot_trajectory_summary(subfolder, data, traj_type, save_path=out_summary)
                 print(f"   [Report Fig] Generated {out_summary}")
@@ -600,6 +712,14 @@ def process_all_subfolders(base_dirs):
             "MTE544_Lab2_Results/stability_analysis_table.csv",
             "MTE544_Lab2_Results/stability_analysis_table.md"
         )
+
+        # Combined bonus error plot for pid_9 and pid_sigmoid_improved
+        pid9_dir = os.path.join(sec6_path, "pid_9")
+        sigmoid_dir = os.path.join(sec6_path, "pid_sigmoid_improved")
+        if os.path.exists(pid9_dir) and os.path.exists(sigmoid_dir):
+            combined_err_path = os.path.join(sec6_path, "report_bonus_errors_parabola_sigmoid.png")
+            plot_bonus_errors_combined(pid9_dir, sigmoid_dir, save_path=combined_err_path)
+            print(f"Saved: {combined_err_path}")
 
 
 if __name__ == "__main__":
