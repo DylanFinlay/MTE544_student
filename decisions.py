@@ -1,4 +1,6 @@
+import os
 import sys
+from datetime import datetime
 
 from utilities import euler_from_quaternion, calculate_angular_error, calculate_linear_error
 from pid import PID_ctrl
@@ -20,7 +22,7 @@ from controller import controller, trajectoryController
 class decision_maker(Node):
     
     
-    def __init__(self, publisher_msg, publishing_topic, qos_publisher, rate=10, motion_type=POINT_PLANNER):
+    def __init__(self, publisher_msg, publishing_topic, qos_publisher, rate=10, motion_type=POINT_PLANNER, q_scale=0.5, r_scale=0.5, log_dir=None):
 
         super().__init__("decision_maker")
 
@@ -31,18 +33,27 @@ class decision_maker(Node):
 
         self.reachThreshold=0.01
 
+        # Configure directory for logging run data
+        if log_dir is None:
+            motion_tag = {POINT_PLANNER: "point", TRAJECTORY_PLANNER: "trajectory", SPIRAL_4TUNE: "spiral"}.get(motion_type, "run")
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            log_dir = f"logs/{motion_tag}_Q{q_scale}_R{r_scale}_{timestamp}"
+
+        print(f"[decision_maker] Logging data to folder '{log_dir}' (and latest to current dir)")
+
+        pose_log = os.path.join(log_dir, "robot_pose.csv")
 
         # TODO Part 3: use the Kalman Filter
         # Use the estimated pose for the controller
-        self.localizer=localization(kalmanFilter, publishing_period)
+        self.localizer=localization(kalmanFilter, publishing_period, loggerName=pose_log, q_scale=q_scale, r_scale=r_scale)
         
         if motion_type==POINT_PLANNER:
-            self.controller=controller(klp=0.2, klv=0.5, kap=0.8, kav=0.6)      
+            self.controller=controller(klp=0.2, klv=0.5, kap=0.8, kav=0.6, log_dir=log_dir)      
             self.planner=planner(POINT_PLANNER)
 
         
         elif motion_type==TRAJECTORY_PLANNER:
-            self.controller=trajectoryController(klp=0.2, klv=0.5, kap=0.8, kav=0.6)      
+            self.controller=trajectoryController(klp=0.2, klv=0.5, kap=0.8, kav=0.6, log_dir=log_dir)      
             self.planner=planner(TRAJECTORY_PLANNER)
         elif motion_type==SPIRAL_4TUNE:
             self.controller=None
@@ -113,11 +124,11 @@ def main(args=None):
     
     
     if args.motion == "point":
-        DM=decision_maker(Twist, "/cmd_vel", 10, motion_type=POINT_PLANNER)
+        DM=decision_maker(Twist, "/cmd_vel", 10, motion_type=POINT_PLANNER, q_scale=args.q, r_scale=args.r)
     elif args.motion == "trajectory":
-        DM=decision_maker(Twist, "/cmd_vel", 10, motion_type=TRAJECTORY_PLANNER)
+        DM=decision_maker(Twist, "/cmd_vel", 10, motion_type=TRAJECTORY_PLANNER, q_scale=args.q, r_scale=args.r)
     elif args.motion == "spiral":
-        DM=decision_maker(Twist, "/cmd_vel", 10, motion_type=SPIRAL_4TUNE)
+        DM=decision_maker(Twist, "/cmd_vel", 10, motion_type=SPIRAL_4TUNE, q_scale=args.q, r_scale=args.r)
     else:
         print("invalid motion type", file=sys.stderr)
         return
@@ -134,8 +145,10 @@ def main(args=None):
 
 if __name__=="__main__":
     
-    argParser=argparse.ArgumentParser(description="point or trajectory") 
-    argParser.add_argument("--motion", type=str, default="spiral")
+    argParser=argparse.ArgumentParser(description="point, trajectory, or spiral") 
+    argParser.add_argument("--motion", type=str, default="spiral", choices=["spiral", "point", "trajectory"])
+    argParser.add_argument("--q", type=float, default=0.5, help="Q covariance scale factor (default: 0.5)")
+    argParser.add_argument("--r", type=float, default=0.5, help="R covariance scale factor (default: 0.5)")
     args = argParser.parse_args()
 
     main(args)

@@ -1,3 +1,4 @@
+import os
 from math import atan2, asin, sqrt
 
 M_PI=3.1415926535
@@ -6,34 +7,41 @@ import numpy as np
 
 class Logger:
     
-    def __init__(self, filename, headers=["e", "e_dot", "e_int", "stamp"]):
+    def __init__(self, filename, headers=["e", "e_dot", "e_int", "stamp"], sync_root=True):
         
         self.filename = filename
+        # If writing to a subdirectory, also mirror lines to the root filename for quick inspection
+        self.sync_filename = os.path.basename(filename) if (sync_root and os.path.dirname(filename)) else None
+
+        dir_name = os.path.dirname(self.filename)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+
+        header_str = ""
+        for header in headers:
+            header_str += header + ", "
+        header_str += "\n"
 
         with open(self.filename, 'w') as file:
-            
-            header_str=""
-
-            for header in headers:
-                header_str+=header
-                header_str+=", "
-            
-            header_str+="\n"
-            
             file.write(header_str)
 
+        if self.sync_filename:
+            with open(self.sync_filename, 'w') as file:
+                file.write(header_str)
 
     def log_values(self, values_list):
 
+        vals_str = ""
+        for value in values_list:
+            vals_str += f"{value}, "
+        vals_str += "\n"
+
         with open(self.filename, 'a') as file:
-            vals_str=""
-            for value in values_list:
-                vals_str+=f"{value}, "
-            
-            vals_str+="\n"
-            
             file.write(vals_str)
-            
+
+        if self.sync_filename:
+            with open(self.sync_filename, 'a') as file:
+                file.write(vals_str)
 
     def save_log(self):
         pass

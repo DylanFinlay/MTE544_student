@@ -33,10 +33,12 @@ odom_qos = QoSProfile(
 
 class localization(Node):
     
-    def __init__(self, type, dt, loggerName="robot_pose.csv", loggerHeaders=["imu_ax", "imu_ay", "kf_ax", "kf_ay","kf_vx","kf_w","kf_x", "kf_y","stamp"]):
+    def __init__(self, type, dt, loggerName="robot_pose.csv", loggerHeaders=["imu_ax", "imu_ay", "kf_ax", "kf_ay","kf_vx","kf_w","kf_x", "kf_y","stamp"], q_scale=0.5, r_scale=0.5):
 
         super().__init__("localizer")
 
+        self.q_scale = q_scale
+        self.r_scale = r_scale
         self.loc_logger=Logger( loggerName , loggerHeaders)
         self.pose=None
         
@@ -58,9 +60,9 @@ class localization(Node):
         # start at rest at the origin, reset odom before each run
         x=np.zeros(6)
         
-        Q=0.5*np.eye(6) # uncertainty added by the motion model each step
+        Q=self.q_scale*np.eye(6) # uncertainty added by the motion model each step
 
-        R=0.5*np.eye(4) # uncertainty in v, w, ax, ay
+        R=self.r_scale*np.eye(4) # uncertainty in v, w, ax, ay
         
         P=np.eye(6) # initial covariance
         

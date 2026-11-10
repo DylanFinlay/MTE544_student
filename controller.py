@@ -1,4 +1,5 @@
 
+import os
 from pid import PID_ctrl
 
 import numpy as np
@@ -11,34 +12,30 @@ P=0; PD=1; PI=2; PID=3
 
 class controller:
     
-    
-    
-    def __init__(self, klp=0.2, klv=0.2, kli=0.2, kap=0.2, kav=0.2, kai=0.2):
-        
-        self.PID_linear=PID_ctrl(PID, klp, klv, kli, filename_="linear.csv")
-        self.PID_angular=PID_ctrl(PID, kap, kav, kai, filename_="angular.csv")
+    def __init__(self, klp=0.2, klv=0.2, kli=0.2, kap=0.2, kav=0.2, kai=0.2, log_dir=None):
+        lin_filename = os.path.join(log_dir, "linear.csv") if log_dir else "linear.csv"
+        ang_filename = os.path.join(log_dir, "angular.csv") if log_dir else "angular.csv"
+        self.PID_linear=PID_ctrl(PID, klp, klv, kli, filename_=lin_filename)
+        self.PID_angular=PID_ctrl(PID, kap, kav, kai, filename_=ang_filename)
 
-    
     def vel_request(self, pose, goal, status):
         
         e_lin=calculate_linear_error(pose, goal)
         e_ang=calculate_angular_error(pose, goal)
 
-        
         linear_vel=self.PID_linear.update([e_lin, pose[3]], status)
         angular_vel=self.PID_angular.update([e_ang, pose[3]], status) 
 
         linear_vel = 0.5 if linear_vel > 1.0 else linear_vel
         angular_vel= 0.5 if angular_vel > 1.0 else angular_vel
 
-
         return linear_vel, angular_vel
     
 
 class trajectoryController(controller):
 
-    def __init__(self, klp=0.2, klv=0.2, kli=0.2, kap=0.2, kav=0.2, kai=0.2, lookAhead=1.0, targetVel=1.0):
-        super().__init__(klp, klv, kli, kap, kav, kai)
+    def __init__(self, klp=0.2, klv=0.2, kli=0.2, kap=0.2, kav=0.2, kai=0.2, lookAhead=1.0, targetVel=1.0, log_dir=None):
+        super().__init__(klp, klv, kli, kap, kav, kai, log_dir=log_dir)
         self.lookAhead=lookAhead
         self.targetVelocity=targetVel
     
