@@ -88,6 +88,8 @@ class localization(Node):
             dt=(stamp - self.lastStamp)/1e9
             if dt<=0: # skip duplicate or older readings
                 return
+            if dt > 1.0: # cap dt if there was a pause or lag spike
+                dt = 0.1
             self.kf.dt=dt
             self.kf.predict()
 
