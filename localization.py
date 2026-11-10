@@ -8,7 +8,7 @@ from utilities import euler_from_quaternion, calculate_angular_error, calculate_
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 
-from rclpy.qos import QoSProfile
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPolicy
 from nav_msgs.msg import Odometry as odom
 
 from sensor_msgs.msg import Imu
@@ -21,11 +21,19 @@ import message_filters
 
 rawSensors=0
 kalmanFilter=1
-odom_qos=QoSProfile(reliability=2, durability=2, history=1, depth=10)
+
+# Sensor QoS profile: BEST_EFFORT and VOLATILE for physical TB4 sensors,
+# which is also compatible with RELIABLE publishers in Gazebo simulation.
+odom_qos = QoSProfile(
+    reliability=ReliabilityPolicy.BEST_EFFORT,
+    durability=DurabilityPolicy.VOLATILE,
+    history=HistoryPolicy.KEEP_LAST,
+    depth=10,
+)
 
 class localization(Node):
     
-    def __init__(self, type, dt, loggerName="robotPose.csv", loggerHeaders=["imu_ax", "imu_ay", "kf_ax", "kf_ay","kf_vx","kf_w","kf_x", "kf_y","stamp"]):
+    def __init__(self, type, dt, loggerName="robot_pose.csv", loggerHeaders=["imu_ax", "imu_ay", "kf_ax", "kf_ay","kf_vx","kf_w","kf_x", "kf_y","stamp"]):
 
         super().__init__("localizer")
 
