@@ -1,6 +1,30 @@
+import os
 import argparse
 import matplotlib.pyplot as plt
 from utilities import FileReader
+
+
+def save_and_show(filename):
+    """Save plot to the root directory (and subfolder if applicable) before showing."""
+    base = os.path.splitext(os.path.basename(filename))[0]
+    subfolder = os.path.dirname(filename)
+    parent = os.path.basename(subfolder) if subfolder else ""
+
+    if parent and parent not in (".", "", "logs"):
+        out_name = f"{parent}_{base}.png"
+    else:
+        out_name = f"{base}.png"
+
+    plt.savefig(out_name, dpi=300, bbox_inches="tight")
+    print(f"Saved plot to {out_name}")
+
+    if subfolder and subfolder not in (".", ""):
+        folder_out = os.path.join(subfolder, f"{base}.png")
+        plt.savefig(folder_out, dpi=300, bbox_inches="tight")
+        print(f"Saved copy to {folder_out}")
+
+    plt.show()
+    plt.close()
 
 
 def plot_robot_pose(headers, values, filename):
@@ -53,7 +77,7 @@ def plot_robot_pose(headers, values, filename):
     axes[1, 1].grid(True)
 
     plt.tight_layout()
-    plt.show()
+    save_and_show(filename)
 
 
 def plot_controller_errors(headers, values, filename):
@@ -82,7 +106,7 @@ def plot_controller_errors(headers, values, filename):
     axes[1].grid(True)
 
     plt.tight_layout()
-    plt.show()
+    save_and_show(filename)
 
 
 def plot_errors(filename):
