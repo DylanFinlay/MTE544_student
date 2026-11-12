@@ -33,7 +33,7 @@ odom_qos = QoSProfile(
 
 class localization(Node):
     
-    def __init__(self, type, dt, loggerName="robot_pose.csv", loggerHeaders=["imu_ax", "imu_ay", "kf_ax", "kf_ay","kf_vx","kf_w","kf_x", "kf_y","stamp"], q_scale=0.5, r_scale=0.5):
+    def __init__(self, type, dt, loggerName="robot_pose.csv", loggerHeaders=["imu_ax", "imu_ay", "kf_ax", "kf_ay","kf_vx","kf_w","kf_x", "kf_y", "odom_x", "odom_y", "stamp" ], q_scale=0.5, r_scale=0.5):
 
         super().__init__("localizer")
 
@@ -117,7 +117,7 @@ class localization(Node):
         # TODO Part 4: log your data
         self.loc_logger.log_values([
             z[2], z[3], xhat[5], xhat[4]*xhat[3],
-            xhat[4], xhat[3], xhat[0], xhat[1], stamp
+            xhat[4], xhat[3], xhat[0], xhat[1], odom_msg.pose.pose.position.x, odom_msg.pose.pose.position.y, stamp
         ])
       
     def odom_callback(self, pose_msg):

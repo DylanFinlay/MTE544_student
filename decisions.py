@@ -31,7 +31,7 @@ class decision_maker(Node):
         
         publishing_period=1/rate
 
-        self.reachThreshold=0.01
+        self.reachThreshold=0.05
 
         # Configure directory for logging run data
         if log_dir is None:

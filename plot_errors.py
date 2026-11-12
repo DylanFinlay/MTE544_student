@@ -39,10 +39,15 @@ def plot_robot_pose(headers, values, filename):
     fig.suptitle(f"EKF Localization Analysis - {filename}", fontsize=14)
 
     # 1. State Space Trajectory (x vs y)
-    axes[0, 0].plot([v[col["kf_x"]] for v in values], [v[col["kf_y"]] for v in values], "b-", label="EKF Path")
+    axes[0, 0].plot([v[col["kf_x"]] for v in values], [v[col["kf_y"]] for v in values], "b-", linewidth=2, label="EKF Path")
+    if "odom_x" in col and "odom_y" in col:
+        axes[0, 0].plot([v[col["odom_x"]] for v in values], [v[col["odom_y"]] for v in values], "k--", alpha=0.75, linewidth=1.5, label="Raw Odometry")
+        axes[0, 0].set_title("Robot Trajectory: EKF vs Odometry")
+    else:
+        axes[0, 0].set_title("Robot Trajectory (State Space)")
+
     axes[0, 0].plot(values[0][col["kf_x"]], values[0][col["kf_y"]], "go", label="Start")
     axes[0, 0].plot(values[-1][col["kf_x"]], values[-1][col["kf_y"]], "rx", label="End")
-    axes[0, 0].set_title("Robot Trajectory (State Space)")
     axes[0, 0].set_xlabel("x [m]")
     axes[0, 0].set_ylabel("y [m]")
     axes[0, 0].legend()
