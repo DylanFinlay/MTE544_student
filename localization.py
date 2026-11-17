@@ -24,7 +24,7 @@ kalmanFilter=1
 
 # Sensor QoS profile: BEST_EFFORT and VOLATILE for physical TB4 sensors,
 # which is also compatible with RELIABLE publishers in Gazebo simulation.
-odom_qos = QoSProfile(
+sensor_qos = QoSProfile(
     reliability=ReliabilityPolicy.BEST_EFFORT,
     durability=DurabilityPolicy.VOLATILE,
     history=HistoryPolicy.KEEP_LAST,
@@ -51,7 +51,7 @@ class localization(Node):
             return  
 
     def initRawSensors(self):
-        self.create_subscription(odom, "/odom", self.odom_callback, qos_profile=odom_qos)
+        self.create_subscription(odom, "/odom", self.odom_callback, qos_profile=sensor_qos)
         
     def initKalmanfilter(self, dt):
         
@@ -70,8 +70,8 @@ class localization(Node):
         self.lastStamp=None
         
         # TODO Part 3: Use the odometry and IMU data for the EKF
-        self.odom_sub=message_filters.Subscriber(self, odom, "/odom", qos_profile=odom_qos)
-        self.imu_sub=message_filters.Subscriber(self, Imu, "/imu", qos_profile=odom_qos)
+        self.odom_sub=message_filters.Subscriber(self, odom, "/odom", qos_profile=sensor_qos)
+        self.imu_sub=message_filters.Subscriber(self, Imu, "/imu", qos_profile=sensor_qos)
         
         time_syncher=message_filters.ApproximateTimeSynchronizer([self.odom_sub, self.imu_sub], queue_size=10, slop=0.1)
         time_syncher.registerCallback(self.fusion_callback)
@@ -115,6 +115,7 @@ class localization(Node):
         self.pose=np.array([xhat[0], xhat[1], xhat[2], odom_msg.header.stamp], dtype=object)
 
         # TODO Part 4: log your data
+        # note that odometry data is also logged here for plotting during the 'kidnapping' case 
         self.loc_logger.log_values([
             z[2], z[3], xhat[5], xhat[4]*xhat[3],
             xhat[4], xhat[3], xhat[0], xhat[1], odom_msg.pose.pose.position.x, odom_msg.pose.pose.position.y, stamp
