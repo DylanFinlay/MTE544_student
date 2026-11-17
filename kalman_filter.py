@@ -27,7 +27,8 @@ class kalman_filter:
         self.A = self.jacobian_A()
         
         self.motion_model()
-        
+
+        # Update the state estimate covariance: P = A*P*A' + Q
         self.P = np.dot(np.dot(self.A, self.P), self.A.T) + self.Q
 
     # TODO Part 3: Calculate the Kalman gain and correct your estimates
@@ -35,7 +36,7 @@ class kalman_filter:
         # C (4x6): measurement model Jacobian (dh/dx) evaluated at predicted state
         self.C = self.jacobian_H()
         
-        # S (4x4): innovation covariance S = C*P*C' + R
+        # S (4x4): S = C*P*C' + R, we inverse S to compute the Kalman gain (more readable)
         S = self.C @ self.P @ self.C.T + self.R
 
         # K (6x4): Kalman gain K = P*C'*inv(S)
@@ -47,7 +48,6 @@ class kalman_filter:
         
         # Correct covariance: P = (I - K*C)*P
         self.P = (np.eye(6) - kalman_gain @ self.C) @ self.P
-        self.P = (self.P + self.P.T) / 2  # maintain symmetry
 
     # TODO Part 3: Implement here the measurement model
     def measurement_model(self):
@@ -61,9 +61,11 @@ class kalman_filter:
 
     # TODO Part 3: Impelment the motion model (state-transition matrice)
     def motion_model(self):
+
         x, y, th, w, v, vdot = self.x
         dt = self.dt
 
+        # Update the state vector via Euler integration 
         self.x = np.array([
             x + v * np.cos(th) * dt,
             y + v * np.sin(th) * dt,
@@ -77,6 +79,8 @@ class kalman_filter:
         x, y, th, w, v, vdot = self.x
         dt = self.dt
 
+        # Jacobian of the motion model A = df/dx
+        # each row is the partial derivative of the corresponding state variable wrt each state variable
         return np.array([
             #x, y, th,                 w,  v,              vdot
             [1, 0, -v*np.sin(th)*dt,  0,  np.cos(th)*dt, 0],
@@ -90,6 +94,9 @@ class kalman_filter:
     # TODO Part 3: Implement here the jacobian of the H matrix (measurements)    
     def jacobian_H(self):
         x, y, th, w, v, vdot = self.x
+
+        # Jacobian of the measurement model H = dh/dx
+        # each row is the partial derivative of the corresponding measurement variable wrt each state variable
         return np.array([
             # x, y, th, w, v, vdot
             [0,  0, 0,  0, 1, 0], # v
