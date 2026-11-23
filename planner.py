@@ -5,10 +5,11 @@ from a_star import *
 POINT_PLANNER=0; TRAJECTORY_PLANNER=1
 
 class planner:
-    def __init__(self, type_, mapName="room"):
+    def __init__(self, type_, mapName="room", heuristic="e"):
 
         self.type=type_
         self.mapName=mapName
+        self.heuristic=heuristic
 
     
     def plan(self, startPose, endPose):
@@ -31,7 +32,7 @@ class planner:
         # TODO PART 5 Create the cost-map, the laser_sig is 
         # the standard deviation for the gausiian for which
         # the mean is located on the occupant grid. 
-        self.m_utilites=mapManipulator(laser_sig=...)
+        self.m_utilites=mapManipulator(filename_=self.mapName, laser_sig=0.5)
             
         self.costMap=self.m_utilites.make_likelihood_field()
         
@@ -49,12 +50,20 @@ class planner:
         
         # TODO PART 5 convert the cell pixels into the cartesian coordinates
         
-        Path = list(map(...))
+        cells = search(self.costMap, startPose, endPose, heuristic=self.heuristic)
 
+        if cells is None:
+            return None
+        
+        path = []
+        # use map utilities cell_2_position function provided for us 
+        for cell in cells:
+            position = self.m_utilites.cell_2_position(cell)
+            path.append(position)
 
 
         # TODO PART 5 return the path as list of [x,y]
-        return ...
+        return [[point[0], point[1]] for point in path]
 
 
 
