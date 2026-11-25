@@ -32,7 +32,9 @@ class planner:
         # TODO PART 5 Create the cost-map, the laser_sig is 
         # the standard deviation for the gausiian for which
         # the mean is located on the occupant grid. 
-        self.m_utilites=mapManipulator(filename_=self.mapName, laser_sig=0.5)
+        # laser_sig=0.25 gives ~0.167 m inflation radius at the 0.8 threshold,
+        # providing safe clearance without sealing off narrow doorways.
+        self.m_utilites=mapManipulator(filename_=self.mapName, laser_sig=0.25)
             
         self.costMap=self.m_utilites.make_likelihood_field()
         

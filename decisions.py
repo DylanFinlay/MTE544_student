@@ -1,13 +1,19 @@
 
 
+import json
+import os
 import sys
+import time
+from datetime import datetime
 
 
-from utilities import euler_from_quaternion, calculate_angular_error, calculate_linear_error
+from utilities import euler_from_quaternion, calculate_angular_error, calculate_linear_error, Logger
 from pid import PID_ctrl
+from plot_runs import generate_run_plots
 
 from rclpy import init, spin, spin_once
 from rclpy.node import Node
+from rclpy.time import Time
 from geometry_msgs.msg import Twist
 
 
@@ -42,12 +48,39 @@ class decision_maker(Node):
         
         publishing_period=1/rate
 
+        # Create a dedicated run folder under ./logs/<heuristic>_<timestamp>/
+        heuristic_map = {"e": "euclidean", "m": "manhattan"}
+        self.heuristic = heuristic
+        self.heuristic_name = heuristic_map.get(heuristic, heuristic).capitalize() if motion_type == TRAJECTORY_PLANNER else "Point"
+        folder_prefix = heuristic_map.get(heuristic, heuristic) if motion_type == TRAJECTORY_PLANNER else "point"
+        run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        logs_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+        self.run_dir = os.path.join(logs_root, f"{folder_prefix}_{run_timestamp}")
+        os.makedirs(self.run_dir, exist_ok=True)
+        print(f"Logging run outputs to: {self.run_dir}")
+
+        self.goal_index = 0
+        self.active_goal_meta = None
+        self.active_traj_logger = None
+        self.run_info = {
+            "heuristic": heuristic,
+            "heuristic_name": self.heuristic_name,
+            "timestamp": run_timestamp,
+            "map_name": "room",
+            "goals": [],
+        }
+        self._save_run_info()
+
         # TODO PART 5 choose your threshold
         # from our prev lab 
         self.reachThreshold=0.05
 
         # TODO PART 5 your localization type
-        self.localizer=localization(kalmanFilter)
+        self.localizer=localization(
+            kalmanFilter,
+            loggerName=os.path.join(self.run_dir, "robotPose.csv"),
+            loggerHeaders=["x", "y", "yaw", "stamp"],
+        )
 
 
         
@@ -64,6 +97,11 @@ class decision_maker(Node):
         else:
             print("Error! you don't have this type of planner", file=sys.stderr)
 
+        # Redirect PID error loggers into this run's folder
+        if hasattr(self, "controller"):
+            self.controller.PID_linear.logger = Logger(os.path.join(self.run_dir, "linear.csv"))
+            self.controller.PID_angular.logger = Logger(os.path.join(self.run_dir, "angular.csv"))
+
 
         self.goal = None
 
@@ -71,6 +109,20 @@ class decision_maker(Node):
 
 
         print("waiting for your input position, use 2D nav goal in rviz2")
+
+    def _save_run_info(self):
+        info_path = os.path.join(self.run_dir, "run_info.json")
+        with open(info_path, "w") as f:
+            json.dump(self.run_info, f, indent=2)
+
+    def generate_plots(self, force=True):
+        self._save_run_info()
+        try:
+            created = generate_run_plots(self.run_dir, map_name=self.run_info.get("map_name", "room"), force=force)
+            if created:
+                print(f"Saved {len(created)} plot(s) to {self.run_dir}")
+        except Exception as exc:
+            print(f"Warning: failed to generate plots automatically: {exc}", file=sys.stderr)
 
 
 
@@ -84,8 +136,47 @@ class decision_maker(Node):
             print("waiting for odom msgs ....")
             return
         
-        self.goal=self.planner.plan([self.localizer.getPose()[0], self.localizer.getPose()[1]],
-                                     [msg.pose.position.x, msg.pose.position.y])
+        pose = self.localizer.getPose()
+        start_xy = [float(pose[0]), float(pose[1])]
+        end_xy = [float(msg.pose.position.x), float(msg.pose.position.y)]
+
+        t0 = time.time()
+        self.goal=self.planner.plan(start_xy, end_xy)
+        plan_time_s = time.time() - t0
+
+        if self.goal is None:
+            print(f"Warning: no path found from {start_xy} to {end_xy}")
+            self.active_traj_logger = None
+            self.active_goal_meta = None
+            return
+
+        # Record planned path and start a dedicated actual-trajectory CSV for this goal
+        self.goal_index += 1
+        planned_file = f"planned_path_goal{self.goal_index}.csv"
+        actual_file = f"actual_trajectory_goal{self.goal_index}.csv"
+
+        planned_logger = Logger(os.path.join(self.run_dir, planned_file), headers=["x", "y"])
+        if isinstance(self.goal, list) and len(self.goal) > 0 and isinstance(self.goal[0], (list, tuple)):
+            for pt in self.goal:
+                planned_logger.log_values([float(pt[0]), float(pt[1])])
+        else:
+            planned_logger.log_values([float(self.goal[0]), float(self.goal[1])])
+
+        self.active_traj_logger = Logger(
+            os.path.join(self.run_dir, actual_file),
+            headers=["x", "y", "yaw", "stamp"],
+        )
+        self.active_goal_meta = {
+            "goal_index": self.goal_index,
+            "start": start_xy,
+            "end": end_xy,
+            "planned_path_file": planned_file,
+            "actual_trajectory_file": actual_file,
+            "plan_time_s": round(plan_time_s, 4),
+            "reached": False,
+        }
+        self.run_info["goals"].append(self.active_goal_meta)
+        self._save_run_info()
 
     
     def timerCallback(self):
@@ -96,11 +187,18 @@ class decision_maker(Node):
             print("waiting for odom msgs ....")
             return
         
+        pose = self.localizer.getPose()
+        stamp_ns = Time.from_msg(pose[3]).nanoseconds
+        pose_row = [float(pose[0]), float(pose[1]), float(pose[2]), stamp_ns]
+        self.localizer.loc_logger.log_values(pose_row)
         
         vel_msg=Twist()
         
         if self.goal is None:
             return
+
+        if self.active_traj_logger is not None:
+            self.active_traj_logger.log_values(pose_row)
         
         if type(self.goal) == list:
             reached_goal=True if calculate_linear_error(self.localizer.getPose(), self.goal[-1]) <self.reachThreshold else False
@@ -117,7 +215,11 @@ class decision_maker(Node):
             self.controller.PID_angular.logger.save_log()
             self.controller.PID_linear.logger.save_log()
 
-
+            if self.active_goal_meta is not None:
+                self.active_goal_meta["reached"] = True
+            self.active_traj_logger = None
+            self.active_goal_meta = None
+            self.generate_plots(force=True)
             
             self.goal = None
             print("waiting for the new position input, use 2D nav goal on map")
@@ -179,8 +281,12 @@ def main(args=None):
 
     try:
         spin(DM)
+    except KeyboardInterrupt:
+        print("\nInterrupted (CTRL+C). Finalizing logs and generating plots...")
     except SystemExit:
         print(f"reached there successfully {DM.localizer.pose}")
+    finally:
+        DM.generate_plots(force=True)
 
 
 

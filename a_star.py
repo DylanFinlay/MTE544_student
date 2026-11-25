@@ -108,10 +108,21 @@ def search(maze, start, end, heuristic="e"):
 
     # TODO PART 4 what squares do we search . serarch movement is left-right-top-bottom
     # (4 or 8 movements) from every positon
-    move = [[0, -1],  # go up
-            [-1, 0],  # go left
-            [0, 1],  # go down
-            [1, 0]]  # go right
+    # Use 8-connected movement for Euclidean heuristic, 4-connected for Manhattan heuristic
+    if heuristic == "e":
+        move = [[0, -1],   # go up
+                [-1, 0],   # go left
+                [0, 1],    # go down
+                [1, 0],    # go right
+                [-1, -1],  # go up left
+                [-1, 1],   # go down left
+                [1, -1],   # go up right
+                [1, 1]]    # go down right
+    else:
+        move = [[0, -1],  # go up
+                [-1, 0],  # go left
+                [0, 1],   # go down
+                [1, 0]]   # go right
 
     """
         1) We first get the current node by comparing all f cost and selecting the lowest cost node for further expansion
@@ -132,7 +143,6 @@ def search(maze, start, end, heuristic="e"):
     """
     # TODO PART 4 find maze has got how many rows and columns
     no_rows, no_columns = maze.shape
-    max_iterations = no_rows * no_columns
     for position in (start_node.position, end_node.position):
         if not (0 <= position[0] < no_rows and 0 <= position[1] < no_columns):
             return None
@@ -201,7 +211,13 @@ def search(maze, start, end, heuristic="e"):
                 continue
 
             # TODO PART 4 Create the f, g, and h values
-            child.g = current_node.g + 1
+            # Diagonal steps (8-connected Euclidean) cost sqrt(2); cardinal steps cost 1
+            is_diagonal = (
+                child.position[0] != current_node.position[0]
+                and child.position[1] != current_node.position[1]
+            )
+            step_cost = sqrt(2) if is_diagonal else 1
+            child.g = current_node.g + step_cost
             child.h = distance(child.position)
 
             child.f = child.g + child.h
