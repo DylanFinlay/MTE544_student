@@ -63,6 +63,8 @@ class localization(Node):
     
     def fusion_callback(self, odom_msg: odom, imu_msg: Imu):
 
+        current_time = Time.from_msg(odom_msg.header.stamp).nanoseconds / 1e9
+
         if not self.kalmanInitialized:
             x=np.array([odom_msg.pose.pose.position.x,
                         odom_msg.pose.pose.position.y,
@@ -78,13 +80,20 @@ class localization(Node):
             P = np.eye(6)
                         
             self.kf=kalman_filter(P,Q,R, x)
+            self.timelast = current_time
+            self.pose=np.array([x[0],
+                                x[1],
+                                normalize_angle(x[2]),
+                                odom_msg.header.stamp])
             
             self.kalmanInitialized = True
+            return
 
-        
-        dt = time.time() - self.timelast
+        dt = current_time - self.timelast
+        if dt <= 0:
+            return
 
-        self.timelast=time.time()
+        self.timelast = current_time
 
 
         z=np.array([odom_msg.twist.twist.linear.x,
