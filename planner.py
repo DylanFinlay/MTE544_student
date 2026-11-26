@@ -34,7 +34,7 @@ class planner:
         # the mean is located on the occupant grid. 
         # laser_sig=0.25 gives ~0.167 m inflation radius at the 0.8 threshold,
         # providing safe clearance without sealing off narrow doorways.
-        self.m_utilites=mapManipulator(filename_=self.mapName, laser_sig=0.25)
+        self.m_utilites=mapManipulator(filename_=self.mapName, laser_sig=0.6)
             
         self.costMap=self.m_utilites.make_likelihood_field()
         
