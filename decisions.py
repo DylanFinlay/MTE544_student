@@ -48,7 +48,7 @@ class decision_maker(Node):
         
         publishing_period=1/rate
 
-        # Create a dedicated run folder under ./logs/<heuristic>_<timestamp>/
+        # each run logs to its own folder: logs/<heuristic>_<timestamp>/
         heuristic_map = {"e": "euclidean", "m": "manhattan"}
         self.heuristic = heuristic
         self.heuristic_name = heuristic_map.get(heuristic, heuristic).capitalize() if motion_type == TRAJECTORY_PLANNER else "Point"
@@ -97,7 +97,7 @@ class decision_maker(Node):
         else:
             print("Error! you don't have this type of planner", file=sys.stderr)
 
-        # Redirect PID error loggers into this run's folder
+        # send the PID error logs to this run's folder
         if hasattr(self, "controller"):
             self.controller.PID_linear.logger = Logger(os.path.join(self.run_dir, "linear.csv"))
             self.controller.PID_angular.logger = Logger(os.path.join(self.run_dir, "angular.csv"))
@@ -150,7 +150,7 @@ class decision_maker(Node):
             self.active_goal_meta = None
             return
 
-        # Record planned path and start a dedicated actual-trajectory CSV for this goal
+        # save the planned path and start a new CSV for the actual trajectory to this goal
         self.goal_index += 1
         planned_file = f"planned_path_goal{self.goal_index}.csv"
         actual_file = f"actual_trajectory_goal{self.goal_index}.csv"

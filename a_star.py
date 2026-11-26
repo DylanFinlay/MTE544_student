@@ -108,7 +108,7 @@ def search(maze, start, end, heuristic="e"):
 
     # TODO PART 4 what squares do we search . serarch movement is left-right-top-bottom
     # (4 or 8 movements) from every positon
-    # Use 8-connected movement for Euclidean heuristic, 4-connected for Manhattan heuristic
+    # Euclidean searches 8 directions (diagonals included), Manhattan only searches 4
     if heuristic == "e":
         move = [[0, -1],   # go up
                 [-1, 0],   # go left
@@ -211,7 +211,7 @@ def search(maze, start, end, heuristic="e"):
                 continue
 
             # TODO PART 4 Create the f, g, and h values
-            # Diagonal steps (8-connected Euclidean) cost sqrt(2); cardinal steps cost 1
+            # diagonal moves cost sqrt(2), straight moves cost 1
             is_diagonal = (
                 child.position[0] != current_node.position[0]
                 and child.position[1] != current_node.position[1]
