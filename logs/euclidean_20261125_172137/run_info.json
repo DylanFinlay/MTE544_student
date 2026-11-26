@@ -1,0 +1,23 @@
+{
+  "heuristic": "e",
+  "heuristic_name": "Euclidean",
+  "timestamp": "20261125_172137",
+  "map_name": "room",
+  "goals": [
+    {
+      "goal_index": 1,
+      "start": [
+        -6.601635844891013e-05,
+        4.7959776534256485e-08
+      ],
+      "end": [
+        2.0186824798583984,
+        2.4376347064971924
+      ],
+      "planned_path_file": "planned_path_goal1.csv",
+      "actual_trajectory_file": "actual_trajectory_goal1.csv",
+      "plan_time_s": 0.3061,
+      "reached": true
+    }
+  ]
+}
